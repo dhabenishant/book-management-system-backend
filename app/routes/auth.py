@@ -9,7 +9,7 @@ from app.middleware.auth import get_current_user
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=TokenResponse)
+@router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(request: RegisterRequest, db: AsyncIOMotorDatabase = Depends(get_db)):
     users_collection = db.get_collection("users")
 
@@ -30,12 +30,9 @@ async def register(request: RegisterRequest, db: AsyncIOMotorDatabase = Depends(
         "created_at": __import__("datetime").datetime.utcnow(),
     }
 
-    result = await users_collection.insert_one(user_doc)
-    user_id = str(result.inserted_id)
+    await users_collection.insert_one(user_doc)
 
-    access_token = create_access_token(data={"sub": user_id, "email": request.email})
-
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"message": "Registration successful. Please login.", "email": request.email}
 
 
 @router.post("/login", response_model=TokenResponse)
